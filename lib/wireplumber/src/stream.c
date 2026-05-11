@@ -187,7 +187,7 @@ static void astal_wp_stream_properties_changed(AstalWpStream *self) {
         id = g_ascii_strtoll(value, NULL, 10);
     }
     AstalWpNode *target_node = astal_wp_wp_get_node_by_id(wp, id);
-    if (astal_wp_node_get_serial(target_node) != self->target_serial) {
+    if (target_node != NULL && astal_wp_node_get_serial(target_node) != self->target_serial) {
         self->target_serial = astal_wp_node_get_serial(target_node);
         g_object_notify(G_OBJECT(self), "target-serial");
         g_object_notify(G_OBJECT(self), "target-endpoint");
