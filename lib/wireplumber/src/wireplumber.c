@@ -226,23 +226,6 @@ static gboolean astal_wp_wp_node_compare_serial(gpointer key, gpointer value, gp
     return astal_wp_node_get_serial(ASTAL_WP_NODE(value)) == GPOINTER_TO_INT(user_data);
 }
 
-static gboolean astal_wp_wp_node_compare_id(gpointer key, gpointer value, gpointer user_data) {
-    return astal_wp_node_get_id(ASTAL_WP_NODE(value)) == GPOINTER_TO_UINT(user_data);
-}
-
-/**
- * astal_wp_wp_get_node_by_id
- *
- * finds the AstalWpNode with the given id.
- *
- * Returns: (transfer none) (nullable)
- */
-AstalWpNode *astal_wp_wp_get_node_by_id(AstalWpWp *self, gint id) {
-    g_return_val_if_fail(ASTAL_WP_IS_WP(self), NULL);
-    AstalWpWpPrivate *priv = astal_wp_wp_get_instance_private(self);
-    return g_hash_table_find(priv->nodes, astal_wp_wp_node_compare_id, GINT_TO_POINTER(id));
-}
-
 /**
  * astal_wp_wp_get_node_by_serial
  *
