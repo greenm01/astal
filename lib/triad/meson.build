@@ -111,3 +111,14 @@ import('pkgconfig').generate(
   requires: deps,
   install_dir: get_option('libdir') / 'pkgconfig',
 )
+
+if get_option('tests')
+  test_bin = executable(
+    'astal-triad-tests',
+    sources + files('tests/triad-ipc.vala'),
+    dependencies: deps,
+    vala_args: ['--define=ASTAL_TRIAD_TESTS'],
+  )
+
+  test('triad-ipc', test_bin)
+endif

@@ -20,6 +20,9 @@ public class Triad : Object {
         new HashTable<uint, Window>((i) => i, (a, b) => a == b);
     private HashTable<uint, Output> _outputs =
         new HashTable<uint, Output>((i) => i, (a, b) => a == b);
+    private List<uint> workspace_order = new List<uint>();
+    private List<uint> window_order = new List<uint>();
+    private List<uint> output_order = new List<uint>();
 
     private SocketConnection event_conn;
     private DataInputStream event_stream;
@@ -27,15 +30,19 @@ public class Triad : Object {
 
     public string socket_path { get; private set; }
     public bool connected { get; private set; }
-    public List<weak Workspace> workspaces { owned get { return _workspaces.get_values(); } }
-    public List<weak Window> windows { owned get { return _windows.get_values(); } }
-    public List<weak Output> outputs { owned get { return _outputs.get_values(); } }
+    public List<weak Workspace> workspaces { owned get { return ordered_workspaces(); } }
+    public List<weak Window> windows { owned get { return ordered_windows(); } }
+    public List<weak Output> outputs { owned get { return ordered_outputs(); } }
     public Workspace? focused_workspace { get; private set; }
     public Window? focused_window { get; private set; }
     public Output? focused_output { get; private set; }
     public uint active_tag { get; private set; }
     public int active_workspace_index { get; private set; default = -1; }
     public bool overview_open { get; private set; }
+    public uint overview_selected_window_id { get; private set; }
+    public string capabilities_json { get; private set; default = "{}"; }
+    public string[] keyboard_layouts { get; private set; default = {}; }
+    public int current_keyboard_layout_index { get; private set; default = -1; }
 
     public signal void raw_event(string name, string json);
     public signal void workspace_added(Workspace workspace);
@@ -50,6 +57,27 @@ public class Triad : Object {
         socket_path = default_socket_path();
         connect_event_stream();
     }
+
+#if ASTAL_TRIAD_TESTS
+    internal Triad.for_test() {
+        socket_path = "/tmp/astal-triad-test.sock";
+    }
+
+    internal string request_payload_for_test(string name, string payload_json = "{}") throws Error {
+        return Json.to_string(build_request(name, payload_json), false);
+    }
+
+    internal string action_payload_for_test(string name, string payload_json = "{}") throws Error {
+        var payload = build_request("action", payload_json);
+        var triad = payload.get_object().get_object_member("triad");
+        triad.set_string_member("action", name);
+        return Json.to_string(payload, false);
+    }
+
+    internal void handle_reply_for_test(string line) throws Error {
+        handle_reply(line);
+    }
+#endif
 
     public Workspace? get_workspace(uint tag_id) {
         return _workspaces.get(tag_id);
@@ -142,7 +170,7 @@ public class Triad : Object {
     public void set_layout(string layout_id, uint tag_id = 0) {
         var payload = @"{\"layout\":\"$(escape_json_string(layout_id))\"";
         if (tag_id > 0) {
-            payload += @",\"tag\":$tag_id";
+            payload += @",\"target\":{\"tag\":$tag_id}";
         }
         payload += "}";
         request_async.begin("set-layout", payload);
@@ -204,6 +232,48 @@ public class Triad : Object {
     private static string escape_json_string(string text) {
         var encoded = Json.to_string(new Json.Node.alloc().init_string(text), false);
         return encoded.substring(1, encoded.length - 2);
+    }
+
+    private List<weak Workspace> ordered_workspaces() {
+        var items = new List<weak Workspace>();
+        foreach (var id in workspace_order) {
+            var workspace = _workspaces.get(id);
+            if (workspace != null) {
+                items.append(workspace);
+            }
+        }
+        return items;
+    }
+
+    private List<weak Window> ordered_windows() {
+        var items = new List<weak Window>();
+        foreach (var id in window_order) {
+            var window = _windows.get(id);
+            if (window != null) {
+                items.append(window);
+            }
+        }
+        return items;
+    }
+
+    private List<weak Output> ordered_outputs() {
+        var items = new List<weak Output>();
+        foreach (var id in output_order) {
+            var output = _outputs.get(id);
+            if (output != null) {
+                items.append(output);
+            }
+        }
+        return items;
+    }
+
+    private static bool order_contains(List<uint> order, uint id) {
+        foreach (var item in order) {
+            if (item == id) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Json.Node build_request(string name, string payload_json) throws Error {
@@ -391,11 +461,25 @@ public class Triad : Object {
                     triad.get_member("window").get_node_type() == Json.NodeType.OBJECT) {
                     sync_window(triad.get_object_member("window"));
                     update_derived_state();
+                } else if (triad.has_member("window") &&
+                    triad.get_member("window").get_node_type() == Json.NodeType.NULL) {
+                    focused_window = null;
+                    notify_property("focused-window");
                 }
                 break;
             case "overview-state":
                 if (triad.has_member("overview")) {
                     handle_overview(triad.get_object_member("overview"));
+                }
+                break;
+            case "capabilities":
+                if (triad.has_member("capabilities")) {
+                    handle_capabilities(triad.get_object_member("capabilities"));
+                }
+                break;
+            case "keyboard-layouts":
+                if (triad.has_member("keyboard_layouts")) {
+                    handle_keyboard_layouts(triad.get_object_member("keyboard_layouts"));
                 }
                 break;
             case "window-changed":
@@ -422,7 +506,31 @@ public class Triad : Object {
         if (state.has_member("overview")) {
             handle_overview(state.get_object_member("overview"));
         }
+        if (state.has_member("capabilities")) {
+            handle_capabilities(state.get_object_member("capabilities"));
+        }
+        if (state.has_member("keyboard_layouts")) {
+            sync_keyboard_layouts(state.get_array_member("keyboard_layouts"));
+        }
+        current_keyboard_layout_index = int_member(state, "current_keyboard_layout_idx", -1);
+        notify_property("current-keyboard-layout-index");
         update_derived_state();
+    }
+
+    private void handle_capabilities(Json.Object capabilities) {
+        capabilities_json = Json.to_string(
+            new Json.Node.alloc().init_object(capabilities),
+            false
+        );
+        notify_property("capabilities-json");
+    }
+
+    private void handle_keyboard_layouts(Json.Object layouts) {
+        if (layouts.has_member("names")) {
+            sync_keyboard_layouts(layouts.get_array_member("names"));
+        }
+        current_keyboard_layout_index = int_member(layouts, "current_idx", -1);
+        notify_property("current-keyboard-layout-index");
     }
 
     private void handle_layout_state(Json.Object state) {
@@ -439,11 +547,25 @@ public class Triad : Object {
 
     private void handle_overview(Json.Object overview) {
         overview_open = bool_member(overview, "is_open");
+        overview_selected_window_id = uint_member(overview, "selected_window_id");
         notify_property("overview-open");
+        notify_property("overview-selected-window-id");
+    }
+
+    private void sync_keyboard_layouts(Json.Array array) {
+        string[] layouts = {};
+        foreach (var node in array.get_elements()) {
+            if (node.get_node_type() == Json.NodeType.VALUE) {
+                layouts += node.get_string();
+            }
+        }
+        keyboard_layouts = layouts;
+        notify_property("keyboard-layouts");
     }
 
     private void sync_workspaces(Json.Array array) {
         var seen = new HashTable<uint, bool>((i) => i, (a, b) => a == b);
+        var next_order = new List<uint>();
 
         foreach (var node in array.get_elements()) {
             if (node.get_node_type() != Json.NodeType.OBJECT) {
@@ -456,6 +578,7 @@ public class Triad : Object {
                 continue;
             }
             seen.insert(tag_id, true);
+            next_order.append(tag_id);
             var workspace = _workspaces.get(tag_id);
             if (workspace == null) {
                 workspace = new Workspace(tag_id);
@@ -465,7 +588,6 @@ public class Triad : Object {
             }
             workspace.sync(obj);
         }
-
         var stale = new List<uint>();
         foreach (var workspace in workspaces) {
             if (!seen.contains(workspace.tag_id)) {
@@ -481,10 +603,13 @@ public class Triad : Object {
             workspace_removed(tag_id);
             notify_property("workspaces");
         }
+        workspace_order = (owned)next_order;
+        notify_property("workspaces");
     }
 
     private void sync_windows(Json.Array array) {
         var seen = new HashTable<uint, bool>((i) => i, (a, b) => a == b);
+        var next_order = new List<uint>();
 
         foreach (var node in array.get_elements()) {
             if (node.get_node_type() != Json.NodeType.OBJECT) {
@@ -494,9 +619,9 @@ public class Triad : Object {
             var id = sync_window(node.get_object());
             if (id > 0) {
                 seen.insert(id, true);
+                next_order.append(id);
             }
         }
-
         var stale = new List<uint>();
         foreach (var window in windows) {
             if (!seen.contains(window.id)) {
@@ -512,6 +637,8 @@ public class Triad : Object {
             window_removed(id);
             notify_property("windows");
         }
+        window_order = (owned)next_order;
+        notify_property("windows");
     }
 
     private uint sync_window(Json.Object obj) {
@@ -524,6 +651,9 @@ public class Triad : Object {
         if (window == null) {
             window = new Window(id);
             _windows.insert(id, window);
+            if (!order_contains(window_order, id)) {
+                window_order.append(id);
+            }
             window_added(window);
             notify_property("windows");
         }
@@ -533,6 +663,7 @@ public class Triad : Object {
 
     private void sync_outputs(Json.Array array) {
         var seen = new HashTable<uint, bool>((i) => i, (a, b) => a == b);
+        var next_order = new List<uint>();
 
         foreach (var node in array.get_elements()) {
             if (node.get_node_type() != Json.NodeType.OBJECT) {
@@ -545,6 +676,7 @@ public class Triad : Object {
                 continue;
             }
             seen.insert(id, true);
+            next_order.append(id);
             var output = _outputs.get(id);
             if (output == null) {
                 output = new Output(id);
@@ -554,7 +686,6 @@ public class Triad : Object {
             }
             output.sync(obj);
         }
-
         var stale = new List<uint>();
         foreach (var output in outputs) {
             if (!seen.contains(output.id)) {
@@ -570,6 +701,8 @@ public class Triad : Object {
             output_removed(id);
             notify_property("outputs");
         }
+        output_order = (owned)next_order;
+        notify_property("outputs");
     }
 
     private void update_derived_state() {

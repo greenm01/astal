@@ -3,3 +3,9 @@ option(
   type: 'boolean',
   value: true,
 )
+
+option(
+  'tests',
+  type: 'boolean',
+  value: false,
+)

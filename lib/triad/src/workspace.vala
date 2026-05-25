@@ -19,6 +19,10 @@ public class Workspace : Object {
     public uint focused_window_id { get; private set; }
     public int master_count { get; private set; }
     public double master_split_ratio { get; private set; }
+    public double target_viewport_x { get; private set; }
+    public double current_viewport_x { get; private set; }
+    public double target_viewport_y { get; private set; }
+    public double current_viewport_y { get; private set; }
     public string last_json { get; private set; default = "{}"; }
 
     internal Workspace(uint tag_id) {
@@ -43,6 +47,13 @@ public class Workspace : Object {
         focused_window_id = Triad.uint_member(obj, "focused_window_id");
         master_count = Triad.int_member(obj, "master_count");
         master_split_ratio = Triad.double_member(obj, "master_split_ratio");
+        if (obj.has_member("viewport") && obj.get_member("viewport").get_node_type() == Json.NodeType.OBJECT) {
+            var viewport = obj.get_object_member("viewport");
+            target_viewport_x = Triad.double_member(viewport, "target_x");
+            current_viewport_x = Triad.double_member(viewport, "current_x");
+            target_viewport_y = Triad.double_member(viewport, "target_y");
+            current_viewport_y = Triad.double_member(viewport, "current_y");
+        }
         last_json = Json.to_string(new Json.Node.alloc().init_object(obj), false);
     }
 
