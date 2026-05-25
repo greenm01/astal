@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "triad": {
+    "version": 1,
+    "type": "commands",
+    "catalog": {
+      "version": 1,
+      "commands": [
+        {
+          "name": "focus-workspace",
+          "usage": "focus-workspace <workspace-idx>",
+          "arg_shape": "required-workspace-idx",
+          "aliases": []
+        },
+        {
+          "name": "switch-keyboard-layout",
+          "usage": "switch-keyboard-layout [next|prev|index]",
+          "arg_shape": "keyboard-layout-target",
+          "aliases": []
+        },
+        {
+          "name": "fullscreen-window",
+          "usage": "fullscreen-window [window-id]",
+          "arg_shape": "optional-window-id",
+          "aliases": ["toggle-fullscreen"]
+        }
+      ],
+      "special_requests": [
+        {
+          "name": "state",
+          "usage": "triad msg state",
+          "description": "Print native Triad shell state JSON."
+        },
+        {
+          "name": "layout-state",
+          "usage": "triad msg layout-state",
+          "description": "Print native Triad layout state JSON."
+        }
+      ]
+    }
+  }
+}

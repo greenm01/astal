@@ -1,20 +1,4 @@
 namespace AstalTriadTest {
-const string LAYOUT_EVENT = """
-{"triad":{"version":1,"event":"layout-state-changed","state":{"version":7,"active_tag":2,"active_workspace_idx":2,"workspaces":[{"tag_id":2,"workspace_idx":2,"name":"web","output":"HDMI-A-1","layout":"deck","layout_kind":"custom","runtime_kind":"scroller","layout_source":"configured","fallback_layout":"scroller","is_configured":true,"is_active":true,"is_output_visible":true,"is_urgent":false,"occupied":true,"focused_window_id":42,"master_count":1,"master_split_ratio":0.6,"viewport":{"target_x":1.5,"current_x":1.0,"target_y":0.0,"current_y":0.0}},{"tag_id":1,"workspace_idx":1,"name":"term","output":"DP-1","layout":"scroller","layout_kind":"core","runtime_kind":"scroller","layout_source":"default","fallback_layout":"","is_configured":true,"is_active":false,"is_output_visible":false,"is_urgent":false,"occupied":true,"focused_window_id":10,"master_count":1,"master_split_ratio":0.5,"viewport":{"target_x":0.0,"current_x":0.0,"target_y":0.0,"current_y":0.0}}]}}}
-""";
-
-const string STATE_EVENT = """
-{"triad":{"version":1,"event":"state-changed","state":{"version":7,"capabilities":{"event_stream":true,"keyboard_layout":true,"monitor_power":true},"overview":{"is_open":true,"selected_window_id":42},"layout":{"version":7,"active_tag":2,"active_workspace_idx":2,"workspaces":[{"tag_id":2,"workspace_idx":2,"name":"web","output":"HDMI-A-1","layout":"deck","layout_kind":"custom","runtime_kind":"scroller","layout_source":"configured","fallback_layout":"scroller","is_configured":true,"is_active":true,"is_output_visible":true,"is_urgent":false,"occupied":true,"focused_window_id":42,"master_count":1,"master_split_ratio":0.6,"viewport":{"target_x":1.5,"current_x":1.0,"target_y":0.0,"current_y":0.0}},{"tag_id":1,"workspace_idx":1,"name":"term","output":"DP-1","layout":"scroller","layout_kind":"core","runtime_kind":"scroller","layout_source":"default","fallback_layout":"","is_configured":true,"is_active":false,"is_output_visible":false,"is_urgent":false,"occupied":true,"focused_window_id":10,"master_count":1,"master_split_ratio":0.5,"viewport":{"target_x":0.0,"current_x":0.0,"target_y":0.0,"current_y":0.0}}]},"keyboard_layouts":["us","de"],"current_keyboard_layout_idx":1,"outputs":[{"id":3,"name":"HDMI-A-1","connected":true,"is_primary":true,"refresh_rate":60000,"physical_width":600,"physical_height":340,"scale":2.0,"transform":"90","geometry":{"x":1920,"y":0,"width":2560,"height":1440}},{"id":1,"name":"DP-1","connected":true,"is_primary":false,"refresh_rate":60000,"physical_width":500,"physical_height":280,"scale":1.0,"transform":"Normal","geometry":{"x":0,"y":0,"width":1920,"height":1080}}],"windows":[{"id":42,"pid":100,"parent_id":9,"title":"Browser","app_id":"firefox","tag_id":2,"workspace_idx":2,"output":"HDMI-A-1","position":{"column_idx":1,"window_idx":1},"is_focused":true,"is_floating":false,"is_maximized":false,"is_minimized":false,"is_sticky":false,"is_overlay":false,"is_unmanaged_global":false,"is_fullscreen":false,"fullscreen_output":null,"width_proportion":0.5,"height_proportion":1.0,"actual_size":{"width":1200,"height":800},"floating_geometry":{"x":10,"y":20,"width":300,"height":200},"keyboard_shortcuts_inhibit":false,"idle_inhibit":"focused","is_terminal":false,"allow_swallow":true,"swallowed_by":null,"swallowing":null},{"id":10,"pid":101,"parent_id":null,"title":"Terminal","app_id":"foot","tag_id":1,"workspace_idx":1,"output":"DP-1","position":{"column_idx":1,"window_idx":1},"is_focused":false,"is_floating":false,"is_maximized":false,"is_minimized":false,"is_sticky":false,"is_overlay":false,"is_unmanaged_global":false,"is_fullscreen":false,"fullscreen_output":null,"width_proportion":1.0,"height_proportion":1.0,"actual_size":{"width":900,"height":700},"floating_geometry":{"x":0,"y":0,"width":0,"height":0},"keyboard_shortcuts_inhibit":false,"idle_inhibit":"none","is_terminal":true,"allow_swallow":false,"swallowed_by":null,"swallowing":null}]}}}
-""";
-
-const string WINDOW_UPDATE_EVENT = """
-{"triad":{"version":1,"event":"window-changed","window":{"id":42,"pid":100,"parent_id":9,"title":"Browser Updated","app_id":"firefox","tag_id":2,"workspace_idx":2,"output":"HDMI-A-1","position":{"column_idx":1,"window_idx":1},"is_focused":true,"is_floating":true,"is_maximized":false,"is_minimized":false,"is_sticky":false,"is_overlay":false,"is_unmanaged_global":false,"is_fullscreen":false,"fullscreen_output":null,"width_proportion":0.5,"height_proportion":1.0,"actual_size":{"width":1200,"height":800},"floating_geometry":{"x":10,"y":20,"width":300,"height":200},"keyboard_shortcuts_inhibit":false,"idle_inhibit":"focused","is_terminal":false,"allow_swallow":true,"swallowed_by":null,"swallowing":null}}}
-""";
-
-const string STALE_STATE_EVENT = """
-{"triad":{"version":1,"event":"state-changed","state":{"version":8,"capabilities":{"event_stream":true},"overview":{"is_open":false,"selected_window_id":null},"layout":{"version":8,"active_tag":1,"active_workspace_idx":1,"workspaces":[{"tag_id":1,"workspace_idx":1,"name":"term","output":"DP-1","layout":"scroller","layout_kind":"core","runtime_kind":"scroller","layout_source":"default","fallback_layout":"","is_configured":true,"is_active":true,"is_output_visible":true,"is_urgent":false,"occupied":true,"focused_window_id":10,"master_count":1,"master_split_ratio":0.5,"viewport":{"target_x":0.0,"current_x":0.0,"target_y":0.0,"current_y":0.0}}]},"keyboard_layouts":["us"],"current_keyboard_layout_idx":0,"outputs":[{"id":1,"name":"DP-1","connected":true,"is_primary":true,"refresh_rate":60000,"physical_width":500,"physical_height":280,"scale":1.0,"transform":"Normal","geometry":{"x":0,"y":0,"width":1920,"height":1080}}],"windows":[{"id":10,"pid":101,"parent_id":null,"title":"Terminal","app_id":"foot","tag_id":1,"workspace_idx":1,"output":"DP-1","position":{"column_idx":1,"window_idx":1},"is_focused":true,"is_floating":false,"is_maximized":false,"is_minimized":false,"is_sticky":false,"is_overlay":false,"is_unmanaged_global":false,"is_fullscreen":false,"fullscreen_output":null,"width_proportion":1.0,"height_proportion":1.0,"actual_size":{"width":900,"height":700},"floating_geometry":{"x":0,"y":0,"width":0,"height":0},"keyboard_shortcuts_inhibit":false,"idle_inhibit":"none","is_terminal":true,"allow_swallow":false,"swallowed_by":null,"swallowing":null}]}}}
-""";
-
 static int removed_workspaces = 0;
 static int removed_windows = 0;
 static int removed_outputs = 0;
@@ -29,6 +13,19 @@ static void on_window_removed(uint id) {
 
 static void on_output_removed(uint id) {
     removed_outputs++;
+}
+
+static string fixture(string name) {
+    var dir = Environment.get_variable("ASTAL_TRIAD_TEST_FIXTURES");
+    assert(dir != null);
+
+    try {
+        string contents;
+        FileUtils.get_contents(Path.build_filename(dir, name), out contents);
+        return contents.strip();
+    } catch (Error err) {
+        assert_not_reached();
+    }
 }
 
 static Json.Object triad_payload(string line) {
@@ -60,6 +57,27 @@ static void test_request_payloads() {
         assert(layout.get_string_member("request") == "set-layout");
         assert(layout.get_string_member("layout") == "deck");
         assert(layout.get_object_member("target").get_int_member("tag") == 2);
+
+        var keyboard = triad_payload(triad.switch_keyboard_layout_payload_for_test("next"));
+        assert(keyboard.get_string_member("action") == "switch-keyboard-layout");
+        assert(keyboard.get_string_member("layout") == "next");
+
+        var keyboard_index = triad_payload(triad.switch_keyboard_layout_index_payload_for_test(1));
+        assert(keyboard_index.get_int_member("layout") == 1);
+
+        var output = triad_payload(triad.output_action_payload_for_test("focus-output", "DP-1"));
+        assert(output.get_string_member("action") == "focus-output");
+        assert(output.get_string_member("output") == "DP-1");
+
+        var spawn = triad_payload(triad.spawn_payload_for_test({"foot", "--app-id", "demo"}));
+        assert(spawn.get_string_member("action") == "spawn");
+        assert(spawn.get_array_member("argv").get_string_element(2) == "demo");
+
+        var screenshot = triad_payload(triad.screenshot_payload_for_test("/tmp/shot.png", false, true, false));
+        assert(screenshot.get_string_member("path") == "/tmp/shot.png");
+        assert(!screenshot.get_boolean_member("show_pointer"));
+        assert(screenshot.get_boolean_member("write_to_disk"));
+        assert(!screenshot.get_boolean_member("copy_to_clipboard"));
     } catch (Error err) {
         assert_not_reached();
     }
@@ -69,17 +87,31 @@ static void test_state_sync() {
     var triad = new AstalTriad.Triad.for_test();
 
     try {
-        triad.handle_reply_for_test(LAYOUT_EVENT.strip());
-        triad.handle_reply_for_test(STATE_EVENT.strip());
+        triad.handle_reply_for_test(fixture("layout-state-event.json"));
+        triad.handle_reply_for_test(fixture("state-event.json"));
+        triad.handle_reply_for_test(fixture("commands-reply.json"));
     } catch (Error err) {
         assert_not_reached();
     }
+
+    assert(triad.layouts.length() == 2);
+    assert(triad.layouts.nth_data(1).id == "deck");
+    assert(triad.layout_cycle.length == 2);
+    assert(triad.layout_cycle[1] == "deck");
+    assert(triad.layout_cycle_entries.length() == 2);
+    assert(triad.layout_cycle_entries.nth_data(1).fallback_layout == "scroller");
+    assert(triad.commands.length() == 3);
+    assert(triad.commands.nth_data(2).aliases[0] == "toggle-fullscreen");
+    assert(triad.special_requests.length() == 2);
+    assert(triad.special_requests.nth_data(1).special);
+    assert(triad.commands_json.contains("\"switch-keyboard-layout\""));
 
     var workspaces = triad.workspaces;
     assert(workspaces.length() == 2);
     assert(workspaces.nth_data(0).tag_id == 2);
     assert(workspaces.nth_data(1).tag_id == 1);
     assert(workspaces.nth_data(0).current_viewport_x == 1.0);
+    assert(workspaces.nth_data(0).columns_json.contains("\"windows\":[42]"));
 
     var outputs = triad.outputs;
     assert(outputs.nth_data(0).name == "HDMI-A-1");
@@ -105,8 +137,8 @@ static void test_state_sync() {
     triad.output_removed.connect(on_output_removed);
 
     try {
-        triad.handle_reply_for_test(WINDOW_UPDATE_EVENT.strip());
-        triad.handle_reply_for_test(STALE_STATE_EVENT.strip());
+        triad.handle_reply_for_test(fixture("window-changed-event.json"));
+        triad.handle_reply_for_test(fixture("stale-state-event.json"));
         triad.handle_reply_for_test("{\"triad\":{\"version\":1,\"type\":\"focused-window\",\"window\":null}}");
     } catch (Error err) {
         assert_not_reached();

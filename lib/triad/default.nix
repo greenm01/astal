@@ -3,7 +3,7 @@
   pkgs,
   ...
 }:
-mkAstalPkg {
+(mkAstalPkg {
   pname = "astal-triad";
   src = ./.;
   packages = [pkgs.json-glib];
@@ -12,4 +12,8 @@ mkAstalPkg {
   authors = "Nil Tempus";
   name = "AstalTriad";
   description = "IPC client for Triad";
-}
+})
+.overrideAttrs (old: {
+  mesonFlags = (old.mesonFlags or []) ++ ["-Dtests=true"];
+  doCheck = true;
+})

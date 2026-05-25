@@ -44,6 +44,8 @@ deps = [
 ]
 
 sources = [config] + files(
+  'src/command.vala',
+  'src/layout.vala',
   'src/output.vala',
   'src/triad.vala',
   'src/window.vala',
@@ -74,7 +76,11 @@ gir = custom_target(
       'json-glib-1.0',
     ),
     '--property', ':'.join(
+      'Triad.commands',
+      'Triad.layouts',
+      'Triad.layout_cycle_entries',
       'Triad.outputs',
+      'Triad.special_requests',
       'Triad.workspaces',
       'Triad.windows',
     ),
@@ -113,6 +119,9 @@ import('pkgconfig').generate(
 )
 
 if get_option('tests')
+  test_env = environment()
+  test_env.set('ASTAL_TRIAD_TEST_FIXTURES', meson.current_source_dir() / 'tests' / 'fixtures')
+
   test_bin = executable(
     'astal-triad-tests',
     sources + files('tests/triad-ipc.vala'),
@@ -120,5 +129,19 @@ if get_option('tests')
     vala_args: ['--define=ASTAL_TRIAD_TESTS'],
   )
 
-  test('triad-ipc', test_bin)
+  test('triad-ipc', test_bin, env: test_env)
+endif
+
+if get_option('socket_tests')
+  socket_test_env = environment()
+  socket_test_env.set('ASTAL_TRIAD_TEST_FIXTURES', meson.current_source_dir() / 'tests' / 'fixtures')
+
+  socket_test_bin = executable(
+    'astal-triad-socket-tests',
+    sources + files('tests/triad-socket.vala'),
+    dependencies: deps,
+    vala_args: ['--define=ASTAL_TRIAD_TESTS'],
+  )
+
+  test('triad-socket', socket_test_bin, env: socket_test_env)
 endif

@@ -20,6 +20,10 @@ public class Triad : Object {
         new HashTable<uint, Window>((i) => i, (a, b) => a == b);
     private HashTable<uint, Output> _outputs =
         new HashTable<uint, Output>((i) => i, (a, b) => a == b);
+    private List<Layout> _layouts = new List<Layout>();
+    private List<LayoutCycleEntry> _layout_cycle_entries = new List<LayoutCycleEntry>();
+    private List<Command> _commands = new List<Command>();
+    private List<Command> _special_requests = new List<Command>();
     private List<uint> workspace_order = new List<uint>();
     private List<uint> window_order = new List<uint>();
     private List<uint> output_order = new List<uint>();
@@ -33,6 +37,10 @@ public class Triad : Object {
     public List<weak Workspace> workspaces { owned get { return ordered_workspaces(); } }
     public List<weak Window> windows { owned get { return ordered_windows(); } }
     public List<weak Output> outputs { owned get { return ordered_outputs(); } }
+    public List<weak Layout> layouts { owned get { return current_layouts(); } }
+    public List<weak LayoutCycleEntry> layout_cycle_entries { owned get { return current_layout_cycle_entries(); } }
+    public List<weak Command> commands { owned get { return current_commands(); } }
+    public List<weak Command> special_requests { owned get { return current_special_requests(); } }
     public Workspace? focused_workspace { get; private set; }
     public Window? focused_window { get; private set; }
     public Output? focused_output { get; private set; }
@@ -41,7 +49,9 @@ public class Triad : Object {
     public bool overview_open { get; private set; }
     public uint overview_selected_window_id { get; private set; }
     public string capabilities_json { get; private set; default = "{}"; }
+    public string commands_json { get; private set; default = "{}"; }
     public string[] keyboard_layouts { get; private set; default = {}; }
+    public string[] layout_cycle { get; private set; default = {}; }
     public int current_keyboard_layout_index { get; private set; default = -1; }
 
     public signal void raw_event(string name, string json);
@@ -63,6 +73,10 @@ public class Triad : Object {
         socket_path = "/tmp/astal-triad-test.sock";
     }
 
+    internal Triad.for_test_path(string path) {
+        socket_path = path;
+    }
+
     internal string request_payload_for_test(string name, string payload_json = "{}") throws Error {
         return Json.to_string(build_request(name, payload_json), false);
     }
@@ -74,8 +88,46 @@ public class Triad : Object {
         return Json.to_string(payload, false);
     }
 
+    internal string switch_keyboard_layout_payload_for_test(string layout = "") throws Error {
+        if (layout.length == 0) {
+            return action_payload_for_test("switch-keyboard-layout");
+        }
+        return action_payload_for_test(
+            "switch-keyboard-layout",
+            string_payload("layout", layout)
+        );
+    }
+
+    internal string switch_keyboard_layout_index_payload_for_test(int index) throws Error {
+        return action_payload_for_test("switch-keyboard-layout", int_payload("layout", index));
+    }
+
+    internal string spawn_payload_for_test(string[] argv) throws Error {
+        return action_payload_for_test("spawn", argv_payload(argv));
+    }
+
+    internal string output_action_payload_for_test(string action, string output) throws Error {
+        return action_payload_for_test(action, string_payload("output", output));
+    }
+
+    internal string screenshot_payload_for_test(
+        string path,
+        bool show_pointer,
+        bool write_to_disk,
+        bool copy_to_clipboard
+    ) throws Error {
+        return action_payload_for_test(
+            "screenshot",
+            screenshot_payload(path, show_pointer, write_to_disk, copy_to_clipboard)
+        );
+    }
+
     internal void handle_reply_for_test(string line) throws Error {
         handle_reply(line);
+    }
+
+    internal void connect_event_stream_for_test() {
+        connect_event_stream();
     }
 #endif
 
@@ -143,6 +195,26 @@ public class Triad : Object {
             });
     }
 
+    public void refresh_layout_state() {
+        request_async.begin("layout-state", "{}", (_, res) => {
+                try {
+                    handle_reply(request_async.end(res));
+                } catch (Error err) {
+                    critical(err.message);
+                }
+            });
+    }
+
+    public void refresh_commands() {
+        request_async.begin("commands", "{}", (_, res) => {
+                try {
+                    handle_reply(request_async.end(res));
+                } catch (Error err) {
+                    critical(err.message);
+                }
+            });
+    }
+
     public void focus_workspace(int workspace_index) {
         action_async.begin("focus-workspace", @"{\"workspace_idx\":$workspace_index}");
     }
@@ -176,8 +248,72 @@ public class Triad : Object {
         request_async.begin("set-layout", payload);
     }
 
+    public void switch_keyboard_layout(string layout = "") {
+        if (layout.length == 0) {
+            action_async.begin("switch-keyboard-layout");
+        } else {
+            action_async.begin("switch-keyboard-layout", string_payload("layout", layout));
+        }
+    }
+
+    public void switch_keyboard_layout_index(int index) {
+        action_async.begin("switch-keyboard-layout", int_payload("layout", index));
+    }
+
     public void toggle_overview() {
         action_async.begin("toggle-overview");
+    }
+
+    public void open_overview() {
+        action_async.begin("open-overview");
+    }
+
+    public void close_overview() {
+        action_async.begin("close-overview");
+    }
+
+    public void focus_output(string output) {
+        action_async.begin("focus-output", string_payload("output", output));
+    }
+
+    public void move_workspace_to_output(string output) {
+        action_async.begin("move-workspace-to-output", string_payload("output", output));
+    }
+
+    public void power_on_monitor(string output) {
+        action_async.begin("power-on-monitor", string_payload("output", output));
+    }
+
+    public void power_off_monitor(string output) {
+        action_async.begin("power-off-monitor", string_payload("output", output));
+    }
+
+    public void power_on_monitors() {
+        action_async.begin("power-on-monitors");
+    }
+
+    public void power_off_monitors() {
+        action_async.begin("power-off-monitors");
+    }
+
+    public void spawn(string[] argv) {
+        action_async.begin("spawn", argv_payload(argv));
+    }
+
+    public void spawn_terminal() {
+        action_async.begin("spawn-terminal");
+    }
+
+    public void screenshot(
+        string path = "",
+        bool show_pointer = true,
+        bool write_to_disk = true,
+        bool copy_to_clipboard = true
+    ) {
+        action_async.begin(
+            "screenshot",
+            screenshot_payload(path, show_pointer, write_to_disk, copy_to_clipboard)
+        );
     }
 
     internal static string string_member(Json.Object obj, string name, string fallback = "") {
@@ -215,6 +351,26 @@ public class Triad : Object {
         return obj.get_double_member(name);
     }
 
+    internal static string object_json(Json.Object obj) {
+        return Json.to_string(new Json.Node.alloc().init_object(obj), false);
+    }
+
+    internal static string array_json(Json.Array array) {
+        return Json.to_string(new Json.Node.alloc().init_array(array), false);
+    }
+
+    internal static string array_member_json(
+        Json.Object obj,
+        string name,
+        string fallback = "[]"
+    ) {
+        if (!obj.has_member(name) ||
+            obj.get_member(name).get_node_type() != Json.NodeType.ARRAY) {
+            return fallback;
+        }
+        return array_json(obj.get_array_member(name));
+    }
+
     private static string default_socket_path() {
         var explicit_path = Environment.get_variable("TRIAD_SOCKET");
         if (explicit_path != null && explicit_path.length > 0) {
@@ -232,6 +388,48 @@ public class Triad : Object {
     private static string escape_json_string(string text) {
         var encoded = Json.to_string(new Json.Node.alloc().init_string(text), false);
         return encoded.substring(1, encoded.length - 2);
+    }
+
+    private static string json_object_payload(Json.Object obj) {
+        return object_json(obj);
+    }
+
+    private static string string_payload(string name, string value) {
+        var obj = new Json.Object();
+        obj.set_string_member(name, value);
+        return json_object_payload(obj);
+    }
+
+    private static string int_payload(string name, int value) {
+        var obj = new Json.Object();
+        obj.set_int_member(name, value);
+        return json_object_payload(obj);
+    }
+
+    private static string argv_payload(string[] argv) {
+        var obj = new Json.Object();
+        var array = new Json.Array();
+        foreach (var arg in argv) {
+            array.add_string_element(arg);
+        }
+        obj.set_array_member("argv", array);
+        return json_object_payload(obj);
+    }
+
+    private static string screenshot_payload(
+        string path,
+        bool show_pointer,
+        bool write_to_disk,
+        bool copy_to_clipboard
+    ) {
+        var obj = new Json.Object();
+        if (path.length > 0) {
+            obj.set_string_member("path", path);
+        }
+        obj.set_boolean_member("show_pointer", show_pointer);
+        obj.set_boolean_member("write_to_disk", write_to_disk);
+        obj.set_boolean_member("copy_to_clipboard", copy_to_clipboard);
+        return json_object_payload(obj);
     }
 
     private List<weak Workspace> ordered_workspaces() {
@@ -263,6 +461,38 @@ public class Triad : Object {
             if (output != null) {
                 items.append(output);
             }
+        }
+        return items;
+    }
+
+    private List<weak Layout> current_layouts() {
+        var items = new List<weak Layout>();
+        foreach (var layout in _layouts) {
+            items.append(layout);
+        }
+        return items;
+    }
+
+    private List<weak LayoutCycleEntry> current_layout_cycle_entries() {
+        var items = new List<weak LayoutCycleEntry>();
+        foreach (var entry in _layout_cycle_entries) {
+            items.append(entry);
+        }
+        return items;
+    }
+
+    private List<weak Command> current_commands() {
+        var items = new List<weak Command>();
+        foreach (var command in _commands) {
+            items.append(command);
+        }
+        return items;
+    }
+
+    private List<weak Command> current_special_requests() {
+        var items = new List<weak Command>();
+        foreach (var command in _special_requests) {
+            items.append(command);
         }
         return items;
     }
@@ -482,6 +712,11 @@ public class Triad : Object {
                     handle_keyboard_layouts(triad.get_object_member("keyboard_layouts"));
                 }
                 break;
+            case "commands":
+                if (triad.has_member("catalog")) {
+                    handle_commands(triad.get_object_member("catalog"));
+                }
+                break;
             case "window-changed":
                 if (triad.has_member("window")) {
                     sync_window(triad.get_object_member("window"));
@@ -539,6 +774,15 @@ public class Triad : Object {
         notify_property("active-tag");
         notify_property("active-workspace-index");
 
+        if (state.has_member("layouts")) {
+            sync_layouts(state.get_array_member("layouts"));
+        }
+        if (state.has_member("layout_cycle")) {
+            sync_layout_cycle(state.get_array_member("layout_cycle"));
+        }
+        if (state.has_member("layout_cycle_entries")) {
+            sync_layout_cycle_entries(state.get_array_member("layout_cycle_entries"));
+        }
         if (state.has_member("workspaces")) {
             sync_workspaces(state.get_array_member("workspaces"));
         }
@@ -561,6 +805,66 @@ public class Triad : Object {
         }
         keyboard_layouts = layouts;
         notify_property("keyboard-layouts");
+    }
+
+    private void sync_layouts(Json.Array array) {
+        var items = new List<Layout>();
+        foreach (var node in array.get_elements()) {
+            if (node.get_node_type() == Json.NodeType.OBJECT) {
+                items.append(new Layout.from_json(node.get_object()));
+            }
+        }
+        _layouts = (owned)items;
+        notify_property("layouts");
+    }
+
+    private void sync_layout_cycle(Json.Array array) {
+        string[] values = {};
+        foreach (var node in array.get_elements()) {
+            if (node.get_node_type() == Json.NodeType.VALUE) {
+                values += node.get_string();
+            }
+        }
+        layout_cycle = values;
+        notify_property("layout-cycle");
+    }
+
+    private void sync_layout_cycle_entries(Json.Array array) {
+        var items = new List<LayoutCycleEntry>();
+        foreach (var node in array.get_elements()) {
+            if (node.get_node_type() == Json.NodeType.OBJECT) {
+                items.append(new LayoutCycleEntry.from_json(node.get_object()));
+            }
+        }
+        _layout_cycle_entries = (owned)items;
+        notify_property("layout-cycle-entries");
+    }
+
+    private void handle_commands(Json.Object catalog) {
+        commands_json = object_json(catalog);
+        notify_property("commands-json");
+
+        var commands = new List<Command>();
+        if (catalog.has_member("commands")) {
+            foreach (var node in catalog.get_array_member("commands").get_elements()) {
+                if (node.get_node_type() == Json.NodeType.OBJECT) {
+                    commands.append(new Command.from_json(node.get_object()));
+                }
+            }
+        }
+        _commands = (owned)commands;
+        notify_property("commands");
+
+        var special = new List<Command>();
+        if (catalog.has_member("special_requests")) {
+            foreach (var node in catalog.get_array_member("special_requests").get_elements()) {
+                if (node.get_node_type() == Json.NodeType.OBJECT) {
+                    special.append(new Command.from_json(node.get_object(), true));
+                }
+            }
+        }
+        _special_requests = (owned)special;
+        notify_property("special-requests");
     }
 
     private void sync_workspaces(Json.Array array) {

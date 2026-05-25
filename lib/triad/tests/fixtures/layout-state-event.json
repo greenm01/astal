@@ -1,0 +1,139 @@
+{
+  "triad": {
+    "version": 1,
+    "event": "layout-state-changed",
+    "state": {
+      "version": 7,
+      "layouts": [
+        {
+          "kind": "builtin",
+          "id": "scroller",
+          "ordinal": 0,
+          "runtime_kind": "scroller",
+          "layout_source": "core"
+        },
+        {
+          "kind": "custom",
+          "id": "deck",
+          "fallback_layout": "scroller",
+          "runtime_kind": "scroller",
+          "layout_source": "bundled"
+        }
+      ],
+      "layout_cycle": ["scroller", "deck"],
+      "layout_cycle_entries": [
+        {"kind": "builtin", "id": "scroller"},
+        {"kind": "custom", "id": "deck", "fallback_layout": "scroller"}
+      ],
+      "active_tag": 2,
+      "active_workspace_idx": 2,
+      "workspaces": [
+        {
+          "tag_id": 2,
+          "workspace_idx": 2,
+          "name": "web",
+          "output": "HDMI-A-1",
+          "layout": "deck",
+          "layout_kind": "custom",
+          "runtime_kind": "scroller",
+          "layout_source": "configured",
+          "fallback_layout": "scroller",
+          "is_configured": true,
+          "is_active": true,
+          "is_output_visible": true,
+          "is_urgent": false,
+          "occupied": true,
+          "focused_window_id": 42,
+          "columns": [
+            {
+              "idx": 1,
+              "width_proportion": 0.5,
+              "scroller_single_proportion": 1.0,
+              "is_full_width": false,
+              "windows": [42]
+            }
+          ],
+          "frames": [
+            {
+              "id": 1,
+              "kind": "leaf",
+              "parent": null,
+              "first_child": null,
+              "second_child": null,
+              "orientation": "horizontal",
+              "ratio": 0.5,
+              "windows": [42],
+              "active_window_id": 42,
+              "focused": true
+            }
+          ],
+          "bsp_nodes": [
+            {
+              "id": 1,
+              "kind": "leaf",
+              "parent": null,
+              "first_child": null,
+              "second_child": null,
+              "orientation": "horizontal",
+              "ratio": 0.5,
+              "window_id": 42,
+              "focused": true,
+              "preselect_direction": null,
+              "preselect_ratio": null
+            }
+          ],
+          "split_nodes": [
+            {
+              "id": 1,
+              "kind": "leaf",
+              "parent": null,
+              "children": [],
+              "mode": "stacking",
+              "last_split_mode": "split-h",
+              "weight": 1.0,
+              "window_id": 42,
+              "focused": true
+            }
+          ],
+          "master_count": 1,
+          "master_split_ratio": 0.6,
+          "viewport": {
+            "target_x": 1.5,
+            "current_x": 1.0,
+            "target_y": 0.0,
+            "current_y": 0.0
+          }
+        },
+        {
+          "tag_id": 1,
+          "workspace_idx": 1,
+          "name": "term",
+          "output": "DP-1",
+          "layout": "scroller",
+          "layout_kind": "core",
+          "runtime_kind": "scroller",
+          "layout_source": "default",
+          "fallback_layout": "",
+          "is_configured": true,
+          "is_active": false,
+          "is_output_visible": false,
+          "is_urgent": false,
+          "occupied": true,
+          "focused_window_id": 10,
+          "columns": [],
+          "frames": [],
+          "bsp_nodes": [],
+          "split_nodes": [],
+          "master_count": 1,
+          "master_split_ratio": 0.5,
+          "viewport": {
+            "target_x": 0.0,
+            "current_x": 0.0,
+            "target_y": 0.0,
+            "current_y": 0.0
+          }
+        }
+      ]
+    }
+  }
+}

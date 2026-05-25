@@ -1,0 +1,234 @@
+{
+  "triad": {
+    "version": 1,
+    "event": "state-changed",
+    "state": {
+      "version": 7,
+      "capabilities": {
+        "event_stream": true,
+        "keyboard_layout": true,
+        "monitor_power": true
+      },
+      "overview": {
+        "is_open": true,
+        "selected_window_id": 42
+      },
+      "layout": {
+        "version": 7,
+        "layouts": [
+          {
+            "kind": "builtin",
+            "id": "scroller",
+            "ordinal": 0,
+            "runtime_kind": "scroller",
+            "layout_source": "core"
+          },
+          {
+            "kind": "custom",
+            "id": "deck",
+            "fallback_layout": "scroller",
+            "runtime_kind": "scroller",
+            "layout_source": "bundled"
+          }
+        ],
+        "layout_cycle": ["scroller", "deck"],
+        "layout_cycle_entries": [
+          {"kind": "builtin", "id": "scroller"},
+          {"kind": "custom", "id": "deck", "fallback_layout": "scroller"}
+        ],
+        "active_tag": 2,
+        "active_workspace_idx": 2,
+        "workspaces": [
+          {
+            "tag_id": 2,
+            "workspace_idx": 2,
+            "name": "web",
+            "output": "HDMI-A-1",
+            "layout": "deck",
+            "layout_kind": "custom",
+            "runtime_kind": "scroller",
+            "layout_source": "configured",
+            "fallback_layout": "scroller",
+            "is_configured": true,
+            "is_active": true,
+            "is_output_visible": true,
+            "is_urgent": false,
+            "occupied": true,
+            "focused_window_id": 42,
+            "columns": [
+              {
+                "idx": 1,
+                "width_proportion": 0.5,
+                "scroller_single_proportion": 1.0,
+                "is_full_width": false,
+                "windows": [42]
+              }
+            ],
+            "frames": [],
+            "bsp_nodes": [],
+            "split_nodes": [],
+            "master_count": 1,
+            "master_split_ratio": 0.6,
+            "viewport": {
+              "target_x": 1.5,
+              "current_x": 1.0,
+              "target_y": 0.0,
+              "current_y": 0.0
+            }
+          },
+          {
+            "tag_id": 1,
+            "workspace_idx": 1,
+            "name": "term",
+            "output": "DP-1",
+            "layout": "scroller",
+            "layout_kind": "core",
+            "runtime_kind": "scroller",
+            "layout_source": "default",
+            "fallback_layout": "",
+            "is_configured": true,
+            "is_active": false,
+            "is_output_visible": false,
+            "is_urgent": false,
+            "occupied": true,
+            "focused_window_id": 10,
+            "columns": [],
+            "frames": [],
+            "bsp_nodes": [],
+            "split_nodes": [],
+            "master_count": 1,
+            "master_split_ratio": 0.5,
+            "viewport": {
+              "target_x": 0.0,
+              "current_x": 0.0,
+              "target_y": 0.0,
+              "current_y": 0.0
+            }
+          }
+        ]
+      },
+      "keyboard_layouts": ["us", "de"],
+      "current_keyboard_layout_idx": 1,
+      "outputs": [
+        {
+          "id": 3,
+          "name": "HDMI-A-1",
+          "connected": true,
+          "is_primary": true,
+          "refresh_rate": 60000,
+          "physical_width": 600,
+          "physical_height": 340,
+          "scale": 2.0,
+          "transform": "90",
+          "geometry": {
+            "x": 1920,
+            "y": 0,
+            "width": 2560,
+            "height": 1440
+          }
+        },
+        {
+          "id": 1,
+          "name": "DP-1",
+          "connected": true,
+          "is_primary": false,
+          "refresh_rate": 60000,
+          "physical_width": 500,
+          "physical_height": 280,
+          "scale": 1.0,
+          "transform": "Normal",
+          "geometry": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 1080
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": 42,
+          "pid": 100,
+          "parent_id": 9,
+          "title": "Browser",
+          "app_id": "firefox",
+          "tag_id": 2,
+          "workspace_idx": 2,
+          "output": "HDMI-A-1",
+          "position": {
+            "column_idx": 1,
+            "window_idx": 1
+          },
+          "is_focused": true,
+          "is_floating": false,
+          "is_maximized": false,
+          "is_minimized": false,
+          "is_sticky": false,
+          "is_overlay": false,
+          "is_unmanaged_global": false,
+          "is_fullscreen": false,
+          "fullscreen_output": null,
+          "width_proportion": 0.5,
+          "height_proportion": 1.0,
+          "actual_size": {
+            "width": 1200,
+            "height": 800
+          },
+          "floating_geometry": {
+            "x": 10,
+            "y": 20,
+            "width": 300,
+            "height": 200
+          },
+          "keyboard_shortcuts_inhibit": false,
+          "idle_inhibit": "focused",
+          "is_terminal": false,
+          "allow_swallow": true,
+          "swallowed_by": null,
+          "swallowing": null
+        },
+        {
+          "id": 10,
+          "pid": 101,
+          "parent_id": null,
+          "title": "Terminal",
+          "app_id": "foot",
+          "tag_id": 1,
+          "workspace_idx": 1,
+          "output": "DP-1",
+          "position": {
+            "column_idx": 1,
+            "window_idx": 1
+          },
+          "is_focused": false,
+          "is_floating": false,
+          "is_maximized": false,
+          "is_minimized": false,
+          "is_sticky": false,
+          "is_overlay": false,
+          "is_unmanaged_global": false,
+          "is_fullscreen": false,
+          "fullscreen_output": null,
+          "width_proportion": 1.0,
+          "height_proportion": 1.0,
+          "actual_size": {
+            "width": 900,
+            "height": 700
+          },
+          "floating_geometry": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "keyboard_shortcuts_inhibit": false,
+          "idle_inhibit": "none",
+          "is_terminal": true,
+          "allow_swallow": false,
+          "swallowed_by": null,
+          "swallowing": null
+        }
+      ]
+    }
+  }
+}

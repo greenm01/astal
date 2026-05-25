@@ -1,0 +1,129 @@
+{
+  "triad": {
+    "version": 1,
+    "event": "state-changed",
+    "state": {
+      "version": 8,
+      "capabilities": {
+        "event_stream": true
+      },
+      "overview": {
+        "is_open": false,
+        "selected_window_id": null
+      },
+      "layout": {
+        "version": 8,
+        "layouts": [
+          {
+            "kind": "builtin",
+            "id": "scroller",
+            "ordinal": 0,
+            "runtime_kind": "scroller",
+            "layout_source": "core"
+          }
+        ],
+        "layout_cycle": ["scroller"],
+        "layout_cycle_entries": [
+          {"kind": "builtin", "id": "scroller"}
+        ],
+        "active_tag": 1,
+        "active_workspace_idx": 1,
+        "workspaces": [
+          {
+            "tag_id": 1,
+            "workspace_idx": 1,
+            "name": "term",
+            "output": "DP-1",
+            "layout": "scroller",
+            "layout_kind": "core",
+            "runtime_kind": "scroller",
+            "layout_source": "default",
+            "fallback_layout": "",
+            "is_configured": true,
+            "is_active": true,
+            "is_output_visible": true,
+            "is_urgent": false,
+            "occupied": true,
+            "focused_window_id": 10,
+            "columns": [],
+            "frames": [],
+            "bsp_nodes": [],
+            "split_nodes": [],
+            "master_count": 1,
+            "master_split_ratio": 0.5,
+            "viewport": {
+              "target_x": 0.0,
+              "current_x": 0.0,
+              "target_y": 0.0,
+              "current_y": 0.0
+            }
+          }
+        ]
+      },
+      "keyboard_layouts": ["us"],
+      "current_keyboard_layout_idx": 0,
+      "outputs": [
+        {
+          "id": 1,
+          "name": "DP-1",
+          "connected": true,
+          "is_primary": true,
+          "refresh_rate": 60000,
+          "physical_width": 500,
+          "physical_height": 280,
+          "scale": 1.0,
+          "transform": "Normal",
+          "geometry": {
+            "x": 0,
+            "y": 0,
+            "width": 1920,
+            "height": 1080
+          }
+        }
+      ],
+      "windows": [
+        {
+          "id": 10,
+          "pid": 101,
+          "parent_id": null,
+          "title": "Terminal",
+          "app_id": "foot",
+          "tag_id": 1,
+          "workspace_idx": 1,
+          "output": "DP-1",
+          "position": {
+            "column_idx": 1,
+            "window_idx": 1
+          },
+          "is_focused": true,
+          "is_floating": false,
+          "is_maximized": false,
+          "is_minimized": false,
+          "is_sticky": false,
+          "is_overlay": false,
+          "is_unmanaged_global": false,
+          "is_fullscreen": false,
+          "fullscreen_output": null,
+          "width_proportion": 1.0,
+          "height_proportion": 1.0,
+          "actual_size": {
+            "width": 900,
+            "height": 700
+          },
+          "floating_geometry": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "keyboard_shortcuts_inhibit": false,
+          "idle_inhibit": "none",
+          "is_terminal": true,
+          "allow_swallow": false,
+          "swallowed_by": null,
+          "swallowing": null
+        }
+      ]
+    }
+  }
+}

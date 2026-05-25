@@ -23,6 +23,10 @@ public class Workspace : Object {
     public double current_viewport_x { get; private set; }
     public double target_viewport_y { get; private set; }
     public double current_viewport_y { get; private set; }
+    public string columns_json { get; private set; default = "[]"; }
+    public string frames_json { get; private set; default = "[]"; }
+    public string bsp_nodes_json { get; private set; default = "[]"; }
+    public string split_nodes_json { get; private set; default = "[]"; }
     public string last_json { get; private set; default = "{}"; }
 
     internal Workspace(uint tag_id) {
@@ -54,7 +58,11 @@ public class Workspace : Object {
             target_viewport_y = Triad.double_member(viewport, "target_y");
             current_viewport_y = Triad.double_member(viewport, "current_y");
         }
-        last_json = Json.to_string(new Json.Node.alloc().init_object(obj), false);
+        columns_json = Triad.array_member_json(obj, "columns");
+        frames_json = Triad.array_member_json(obj, "frames");
+        bsp_nodes_json = Triad.array_member_json(obj, "bsp_nodes");
+        split_nodes_json = Triad.array_member_json(obj, "split_nodes");
+        last_json = Triad.object_json(obj);
     }
 
     public void activate() {
