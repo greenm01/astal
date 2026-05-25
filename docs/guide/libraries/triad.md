@@ -1,12 +1,13 @@
 # Triad
 
-Library for monitoring and controlling
-[Triad](https://github.com/greenm01/triad) through its native IPC socket.
+Library for reading and controlling
+[Triad](https://github.com/greenm01/triad) over its native IPC socket.
 
 ## Usage
 
-Triad exposes workspaces, windows, outputs, focused state, and common shell
-actions through `$TRIAD_SOCKET`.
+The library reads Triad workspaces, windows, outputs, focus state, layouts,
+keyboard layouts, and the command catalog from `$TRIAD_SOCKET`. It also includes
+helpers for common shell actions.
 
 ### Library
 
@@ -71,14 +72,14 @@ foreach (var workspace in triad.workspaces) {
 
     :::
 
-2. clone repo
+2. clone the repository
 
     ```sh
     git clone https://github.com/aylur/astal.git
     cd astal/lib/triad
     ```
 
-3. install
+3. install the library
 
     ```sh
     meson setup build

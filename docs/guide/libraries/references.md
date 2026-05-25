@@ -33,7 +33,7 @@ documentation will vary depending on the language they are used in.
   and defining subcommands
 - [River](https://docs.astal.dev/river): Library and cli tool for getting status
   information of the river wayland compositor
-- [Triad](https://docs.astal.dev/triad): Library for Triad native IPC
+- [Triad](https://docs.astal.dev/triad): Library for the Triad native IPC socket
 - [Tray](https://docs.astal.dev/tray): A systemtray library and cli tool
 - [WirePlumber](https://docs.astal.dev/wireplumber): A library for audio control
   using wireplumber
