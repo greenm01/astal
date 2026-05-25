@@ -53,10 +53,15 @@ static void test_request_payloads() {
         assert(focus.get_string_member("action") == "focus-workspace");
         assert(focus.get_int_member("workspace_idx") == 3);
 
-        var layout = triad_payload(triad.request_payload_for_test("set-layout", "{\"layout\":\"deck\",\"target\":{\"tag\":2}}"));
+        var layout = triad_payload(triad.set_layout_payload_for_test("deck", 2));
         assert(layout.get_string_member("request") == "set-layout");
         assert(layout.get_string_member("layout") == "deck");
         assert(layout.get_object_member("target").get_int_member("tag") == 2);
+
+        var global_layout = triad_payload(triad.set_layout_payload_for_test("scroller"));
+        assert(global_layout.get_string_member("request") == "set-layout");
+        assert(global_layout.get_string_member("layout") == "scroller");
+        assert(!global_layout.has_member("target"));
 
         var keyboard = triad_payload(triad.switch_keyboard_layout_payload_for_test("next"));
         assert(keyboard.get_string_member("action") == "switch-keyboard-layout");
@@ -68,6 +73,28 @@ static void test_request_payloads() {
         var output = triad_payload(triad.output_action_payload_for_test("focus-output", "DP-1"));
         assert(output.get_string_member("action") == "focus-output");
         assert(output.get_string_member("output") == "DP-1");
+
+        var move_tag = triad_payload(triad.move_window_to_tag_payload_for_test(42, 3, true));
+        assert(move_tag.get_string_member("action") == "move-window-to-tag");
+        assert(move_tag.get_int_member("id") == 42);
+        assert(move_tag.get_int_member("tag") == 3);
+        assert(move_tag.get_boolean_member("follow"));
+
+        var move_workspace = triad_payload(triad.move_window_to_workspace_payload_for_test(42, 4, false));
+        assert(move_workspace.get_string_member("action") == "move-window-to-workspace");
+        assert(move_workspace.get_int_member("workspace_idx") == 4);
+        assert(!move_workspace.get_boolean_member("follow"));
+
+        var key_binding = triad_payload(triad.dispatch_binding_payload_for_test("key", "Super+Return"));
+        assert(key_binding.get_string_member("request") == "dispatch-binding");
+        assert(key_binding.get_string_member("kind") == "key");
+        assert(key_binding.get_string_member("binding") == "Super+Return");
+
+        var axis_binding = triad_payload(triad.dispatch_binding_payload_for_test("axis", "Super+wheel-up", 2));
+        assert(axis_binding.get_int_member("ticks") == 2);
+
+        var gesture_binding = triad_payload(triad.dispatch_binding_payload_for_test("gesture", "Super+swipe-left", 4));
+        assert(gesture_binding.get_int_member("fingers") == 4);
 
         var spawn = triad_payload(triad.spawn_payload_for_test({"foot", "--app-id", "demo"}));
         assert(spawn.get_string_member("action") == "spawn");
@@ -102,6 +129,10 @@ static void test_state_sync() {
     assert(triad.layout_cycle_entries.nth_data(1).fallback_layout == "scroller");
     assert(triad.commands.length() == 3);
     assert(triad.commands.nth_data(2).aliases[0] == "toggle-fullscreen");
+    assert(triad.has_command("fullscreen-window"));
+    assert(triad.has_command("toggle-fullscreen"));
+    assert(triad.get_command("toggle-fullscreen").name == "fullscreen-window");
+    assert(!triad.has_command("missing-command"));
     assert(triad.special_requests.length() == 2);
     assert(triad.special_requests.nth_data(1).special);
     assert(triad.commands_json.contains("\"switch-keyboard-layout\""));
@@ -128,6 +159,8 @@ static void test_state_sync() {
     assert(triad.current_keyboard_layout_index == 1);
     assert(triad.keyboard_layouts[1] == "de");
     assert(triad.capabilities_json.contains("\"monitor_power\":true"));
+    assert(triad.has_capability("monitor_power"));
+    assert(!triad.has_capability("workspace_urgency"));
 
     removed_workspaces = 0;
     removed_windows = 0;

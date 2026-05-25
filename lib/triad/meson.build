@@ -145,3 +145,14 @@ if get_option('socket_tests')
 
   test('triad-socket', socket_test_bin, env: socket_test_env)
 endif
+
+if get_option('live_tests')
+  live_test_bin = executable(
+    'astal-triad-live-tests',
+    sources + files('tests/triad-live.vala'),
+    dependencies: deps,
+    vala_args: ['--define=ASTAL_TRIAD_TESTS'],
+  )
+
+  test('triad-live', live_test_bin, timeout: 10)
+endif

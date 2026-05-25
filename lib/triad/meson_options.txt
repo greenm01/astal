@@ -15,3 +15,9 @@ option(
   type: 'boolean',
   value: false,
 )
+
+option(
+  'live_tests',
+  type: 'boolean',
+  value: false,
+)

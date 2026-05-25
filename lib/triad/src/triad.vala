@@ -110,6 +110,33 @@ public class Triad : Object {
         return action_payload_for_test(action, string_payload("output", output));
     }
 
+    internal string set_layout_payload_for_test(string layout_id, uint tag_id = 0) throws Error {
+        return request_payload_for_test("set-layout", set_layout_payload(layout_id, tag_id));
+    }
+
+    internal string move_window_to_tag_payload_for_test(uint id, uint tag_id, bool follow) throws Error {
+        return action_payload_for_test("move-window-to-tag", window_tag_follow_payload(id, tag_id, follow));
+    }
+
+    internal string move_window_to_workspace_payload_for_test(
+        uint id,
+        int workspace_index,
+        bool follow
+    ) throws Error {
+        return action_payload_for_test(
+            "move-window-to-workspace",
+            window_workspace_follow_payload(id, workspace_index, follow)
+        );
+    }
+
+    internal string dispatch_binding_payload_for_test(
+        string kind,
+        string binding,
+        int value = 0
+    ) throws Error {
+        return request_payload_for_test("dispatch-binding", dispatch_binding_payload(kind, binding, value));
+    }
+
     internal string screenshot_payload_for_test(
         string path,
         bool show_pointer,
@@ -161,6 +188,43 @@ public class Triad : Object {
         return null;
     }
 
+    public Command? get_command(string name) {
+        foreach (var command in _commands) {
+            if (command.name == name) {
+                return command;
+            }
+            foreach (var alias in command.aliases) {
+                if (alias == name) {
+                    return command;
+                }
+            }
+        }
+        return null;
+    }
+
+    public bool has_command(string name) {
+        return get_command(name) != null;
+    }
+
+    public bool has_capability(string name) {
+        try {
+            var parser = new Json.Parser();
+            parser.load_from_data(capabilities_json);
+            var root = parser.get_root();
+            if (root.get_node_type() != Json.NodeType.OBJECT) {
+                return false;
+            }
+            var capabilities = root.get_object();
+            if (!capabilities.has_member(name)) {
+                return false;
+            }
+            var node = capabilities.get_member(name);
+            return node.get_node_type() == Json.NodeType.VALUE && node.get_boolean();
+        } catch (Error err) {
+            return false;
+        }
+    }
+
     public string request(string name, string payload_json = "{}") throws Error {
         var payload = build_request(name, payload_json);
         return send_node(payload);
@@ -186,33 +250,43 @@ public class Triad : Object {
     }
 
     public void refresh() {
-        request_async.begin("state", "{}", (_, res) => {
-                try {
-                    handle_reply(request_async.end(res));
-                } catch (Error err) {
-                    critical(err.message);
-                }
-            });
+        refresh_request("state");
     }
 
     public void refresh_layout_state() {
-        request_async.begin("layout-state", "{}", (_, res) => {
-                try {
-                    handle_reply(request_async.end(res));
-                } catch (Error err) {
-                    critical(err.message);
-                }
-            });
+        refresh_request("layout-state");
     }
 
     public void refresh_commands() {
-        request_async.begin("commands", "{}", (_, res) => {
-                try {
-                    handle_reply(request_async.end(res));
-                } catch (Error err) {
-                    critical(err.message);
-                }
-            });
+        refresh_request("commands");
+    }
+
+    public void refresh_capabilities() {
+        refresh_request("capabilities");
+    }
+
+    public void refresh_workspaces() {
+        refresh_request("workspaces");
+    }
+
+    public void refresh_outputs() {
+        refresh_request("outputs");
+    }
+
+    public void refresh_windows() {
+        refresh_request("windows");
+    }
+
+    public void refresh_focused_window() {
+        refresh_request("focused-window");
+    }
+
+    public void refresh_overview() {
+        refresh_request("overview-state");
+    }
+
+    public void refresh_keyboard_layouts() {
+        refresh_request("keyboard-layouts");
     }
 
     public void focus_workspace(int workspace_index) {
@@ -231,7 +305,7 @@ public class Triad : Object {
         if (id == 0) {
             action_async.begin("close-window");
         } else {
-            action_async.begin("close-window", @"{\"id\":$id}");
+            action_async.begin("close-window", uint_payload("id", id));
         }
     }
 
@@ -240,12 +314,7 @@ public class Triad : Object {
     }
 
     public void set_layout(string layout_id, uint tag_id = 0) {
-        var payload = @"{\"layout\":\"$(escape_json_string(layout_id))\"";
-        if (tag_id > 0) {
-            payload += @",\"target\":{\"tag\":$tag_id}";
-        }
-        payload += "}";
-        request_async.begin("set-layout", payload);
+        request_async.begin("set-layout", set_layout_payload(layout_id, tag_id));
     }
 
     public void switch_keyboard_layout(string layout = "") {
@@ -272,12 +341,71 @@ public class Triad : Object {
         action_async.begin("close-overview");
     }
 
+    public void toggle_scratchpad() {
+        action_async.begin("toggle-scratchpad");
+    }
+
+    public void toggle_named_scratchpad(string name) {
+        action_async.begin("toggle-named-scratchpad", string_payload("name", name));
+    }
+
+    public void move_to_scratchpad() {
+        action_async.begin("move-to-scratchpad");
+    }
+
+    public void move_to_named_scratchpad(string name) {
+        action_async.begin("move-to-named-scratchpad", string_payload("name", name));
+    }
+
+    public void toggle_floating() {
+        action_async.begin("toggle-floating");
+    }
+
+    public void fullscreen_window(uint id = 0) {
+        if (id == 0) {
+            action_async.begin("fullscreen-window");
+        } else {
+            action_async.begin("fullscreen-window", uint_payload("id", id));
+        }
+    }
+
+    public void toggle_maximized() {
+        action_async.begin("maximize-window-to-edges");
+    }
+
+    public void minimize() {
+        action_async.begin("minimize");
+    }
+
+    public void move_to_tag(uint tag_id) {
+        action_async.begin("move-to-tag", uint_payload("tag", tag_id));
+    }
+
+    public void move_to_workspace(int workspace_index) {
+        action_async.begin("move-to-workspace", int_payload("workspace_idx", workspace_index));
+    }
+
+    public void move_window_to_tag(uint id, uint tag_id, bool follow = false) {
+        action_async.begin("move-window-to-tag", window_tag_follow_payload(id, tag_id, follow));
+    }
+
+    public void move_window_to_workspace(uint id, int workspace_index, bool follow = false) {
+        action_async.begin(
+            "move-window-to-workspace",
+            window_workspace_follow_payload(id, workspace_index, follow)
+        );
+    }
+
     public void focus_output(string output) {
         action_async.begin("focus-output", string_payload("output", output));
     }
 
     public void move_workspace_to_output(string output) {
         action_async.begin("move-workspace-to-output", string_payload("output", output));
+    }
+
+    public void move_to_output(string output) {
+        action_async.begin("move-to-output", string_payload("output", output));
     }
 
     public void power_on_monitor(string output) {
@@ -302,6 +430,30 @@ public class Triad : Object {
 
     public void spawn_terminal() {
         action_async.begin("spawn-terminal");
+    }
+
+    public void new_workspace() {
+        action_async.begin("new-workspace");
+    }
+
+    public void dispatch_binding(string kind, string binding, int value = 0) {
+        request_async.begin("dispatch-binding", dispatch_binding_payload(kind, binding, value));
+    }
+
+    public void dispatch_key_binding(string binding) {
+        dispatch_binding("key", binding);
+    }
+
+    public void dispatch_pointer_binding(string binding) {
+        dispatch_binding("pointer", binding);
+    }
+
+    public void dispatch_axis_binding(string binding, int ticks = 1) {
+        dispatch_binding("axis", binding, ticks);
+    }
+
+    public void dispatch_gesture_binding(string binding, int fingers) {
+        dispatch_binding("gesture", binding, fingers);
     }
 
     public void screenshot(
@@ -385,11 +537,6 @@ public class Triad : Object {
         return "/tmp/triad.sock";
     }
 
-    private static string escape_json_string(string text) {
-        var encoded = Json.to_string(new Json.Node.alloc().init_string(text), false);
-        return encoded.substring(1, encoded.length - 2);
-    }
-
     private static string json_object_payload(Json.Object obj) {
         return object_json(obj);
     }
@@ -403,6 +550,52 @@ public class Triad : Object {
     private static string int_payload(string name, int value) {
         var obj = new Json.Object();
         obj.set_int_member(name, value);
+        return json_object_payload(obj);
+    }
+
+    private static string uint_payload(string name, uint value) {
+        var obj = new Json.Object();
+        obj.set_int_member(name, (int64)value);
+        return json_object_payload(obj);
+    }
+
+    private static string set_layout_payload(string layout_id, uint tag_id = 0) {
+        var obj = new Json.Object();
+        obj.set_string_member("layout", layout_id);
+        if (tag_id > 0) {
+            var target = new Json.Object();
+            target.set_int_member("tag", (int64)tag_id);
+            obj.set_object_member("target", target);
+        }
+        return json_object_payload(obj);
+    }
+
+    private static string window_tag_follow_payload(uint id, uint tag_id, bool follow) {
+        var obj = new Json.Object();
+        obj.set_int_member("id", (int64)id);
+        obj.set_int_member("tag", (int64)tag_id);
+        obj.set_boolean_member("follow", follow);
+        return json_object_payload(obj);
+    }
+
+    private static string window_workspace_follow_payload(uint id, int workspace_index, bool follow) {
+        var obj = new Json.Object();
+        obj.set_int_member("id", (int64)id);
+        obj.set_int_member("workspace_idx", workspace_index);
+        obj.set_boolean_member("follow", follow);
+        return json_object_payload(obj);
+    }
+
+    private static string dispatch_binding_payload(string kind, string binding, int value = 0) {
+        var obj = new Json.Object();
+        var normalized_kind = kind.down();
+        obj.set_string_member("kind", normalized_kind);
+        obj.set_string_member("binding", binding);
+        if (normalized_kind == "axis") {
+            obj.set_int_member("ticks", value == 0 ? 1 : value);
+        } else if (normalized_kind == "gesture") {
+            obj.set_int_member("fingers", value);
+        }
         return json_object_payload(obj);
     }
 
@@ -430,6 +623,16 @@ public class Triad : Object {
         obj.set_boolean_member("write_to_disk", write_to_disk);
         obj.set_boolean_member("copy_to_clipboard", copy_to_clipboard);
         return json_object_payload(obj);
+    }
+
+    private void refresh_request(string name) {
+        request_async.begin(name, "{}", (_, res) => {
+                try {
+                    handle_reply(request_async.end(res));
+                } catch (Error err) {
+                    critical(err.message);
+                }
+            });
     }
 
     private List<weak Workspace> ordered_workspaces() {
