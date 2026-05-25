@@ -33,6 +33,7 @@
       powerprofiles = mkPkg ./lib/powerprofiles;
       quarrel = mkPkg ./lib/quarrel;
       river = mkPkg ./lib/river;
+      triad = mkPkg ./lib/triad;
       tray = mkPkg ./lib/tray;
       wireplumber = mkPkg ./lib/wireplumber;
       wl = mkPkg ./lib/wl;

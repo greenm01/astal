@@ -1,0 +1,9 @@
+{
+  "type": "module",
+  "devDependencies": {
+    "@girs/astal-4": "latest",
+    "@girs/astaltriad-0.1": "latest",
+    "@girs/gjs": "latest",
+    "typescript": "latest"
+  }
+}

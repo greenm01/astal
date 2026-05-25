@@ -1,0 +1,33 @@
+.TriadBar {
+  background: rgba(22, 24, 28, 0.92);
+  color: #f5f7fb;
+  font-weight: 600;
+  padding: 4px 8px;
+}
+
+.TriadBar button {
+  border: 0;
+  border-radius: 6px;
+  padding: 3px 9px;
+  background: transparent;
+  color: #d8dde8;
+}
+
+.TriadBar button.occupied {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.TriadBar button.active {
+  background: #79b8ff;
+  color: #07111f;
+}
+
+.TriadBar button.urgent {
+  background: #ff6b7a;
+  color: #1f0508;
+}
+
+.TriadBar .title {
+  color: #c8d0dc;
+  margin: 0 10px;
+}
